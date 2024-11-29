@@ -139,14 +139,16 @@ void TrajectoryGeneratorLIN::extractMotionPlanInfo(const planning_scene::Plannin
 
 void TrajectoryGeneratorLIN::plan(const planning_scene::PlanningSceneConstPtr& scene,
                                   const planning_interface::MotionPlanRequest& req, const MotionPlanInfo& plan_info,
-                                  double sampling_time, trajectory_msgs::msg::JointTrajectory& joint_trajectory)
+                                  const double& sampling_time, trajectory_msgs::msg::JointTrajectory& joint_trajectory)
 {
   // create Cartesian path for lin
   std::unique_ptr<KDL::Path> path(setPathLIN(plan_info.start_pose, plan_info.goal_pose));
 
   // create velocity profile
+  //std::unique_ptr<KDL::VelocityProfile> vp(
+  //    cartesianTrapVelocityProfile(req.max_velocity_scaling_factor, req.max_acceleration_scaling_factor, path));
   std::unique_ptr<KDL::VelocityProfile> vp(
-      cartesianTrapVelocityProfile(req.max_velocity_scaling_factor, req.max_acceleration_scaling_factor, path));
+      cartesianRectVelocityProfile(req.max_velocity_scaling_factor, path));
 
   // combine path and velocity profile into Cartesian trajectory
   // with the third parameter set to false, KDL::Trajectory_Segment does not
@@ -170,17 +172,19 @@ void TrajectoryGeneratorLIN::plan(const planning_scene::PlanningSceneConstPtr& s
 std::unique_ptr<KDL::Path> TrajectoryGeneratorLIN::setPathLIN(const Eigen::Affine3d& start_pose,
                                                               const Eigen::Affine3d& goal_pose) const
 {
-  RCLCPP_DEBUG(getLogger(), "Set Cartesian path for LIN command.");
+  RCLCPP_DEBUG(LOGGER, "Set Cartesian path for LIN command.");
 
   KDL::Frame kdl_start_pose, kdl_goal_pose;
   tf2::transformEigenToKDL(start_pose, kdl_start_pose);
   tf2::transformEigenToKDL(goal_pose, kdl_goal_pose);
-  double eqradius =
-      planner_limits_.getCartesianLimits().max_trans_vel / planner_limits_.getCartesianLimits().max_rot_vel;
+  //double eqradius = planner_limits_.getCartesianLimits().getMaxTranslationalVelocity() /
+  //                  planner_limits_.getCartesianLimits().getMaxRotationalVelocity();
+  double eqradius = 0.0;
   KDL::RotationalInterpolation* rot_interpo = new KDL::RotationalInterpolation_SingleAxis();
 
   return std::unique_ptr<KDL::Path>(
       std::make_unique<KDL::Path_Line>(kdl_start_pose, kdl_goal_pose, rot_interpo, eqradius, true));
 }
 
+}  // namespace pilz_industrial_motion_planner
 }  // namespace pilz_industrial_motion_planner
