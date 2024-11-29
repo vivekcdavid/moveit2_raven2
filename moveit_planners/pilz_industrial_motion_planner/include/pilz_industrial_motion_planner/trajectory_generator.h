@@ -136,8 +136,10 @@ protected:
    * The trap profile returns uses the longer distance of translational and
    * rotational motion.
    */
-  std::unique_ptr<KDL::VelocityProfile> cartesianTrapVelocityProfile(double max_velocity_scaling_factor,
-                                                                     double max_acceleration_scaling_factor,
+    std::unique_ptr<KDL::VelocityProfile> cartesianTrapVelocityProfile(const double& max_velocity_scaling_factor,
+                                                                     const double& max_acceleration_scaling_factor,
+                                                                     const std::unique_ptr<KDL::Path>& path) const;
+    std::unique_ptr<KDL::VelocityProfile> cartesianRectVelocityProfile(const double& max_velocity_scaling_factor,
                                                                      const std::unique_ptr<KDL::Path>& path) const;
 
 private:
